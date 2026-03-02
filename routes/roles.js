@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Category = require('../models/Category');
+const Role = require('../models/Role');
 
-// CREATE - Tạo category mới
+// CREATE - Tạo role mới
 router.post('/', async (req, res, next) => {
   try {
     const { name, description } = req.body;
@@ -16,54 +16,54 @@ router.post('/', async (req, res, next) => {
     }
 
     // Kiểm tra name đã tồn tại chưa
-    const existingCategory = await Category.findOne({ name, isDeleted: false });
-    if (existingCategory) {
+    const existingRole = await Role.findOne({ name, isDeleted: false });
+    if (existingRole) {
       return res.status(400).json({
         success: false,
-        message: 'Category name already exists'
+        message: 'Role name already exists'
       });
     }
 
-    const newCategory = new Category({
+    const newRole = new Role({
       name,
       description: description || ""
     });
 
-    await newCategory.save();
+    await newRole.save();
 
     res.status(201).json({
       success: true,
-      message: 'Category created successfully',
-      data: newCategory
+      message: 'Role created successfully',
+      data: newRole
     });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'Category name already exists'
+        message: 'Role name already exists'
       });
     }
     next(error);
   }
 });
 
-// READ - Lấy tất cả categories (không bao gồm đã xóa mềm)
+// READ - Lấy tất cả roles (không bao gồm đã xóa mềm)
 router.get('/', async (req, res, next) => {
   try {
     const { page = 1, limit = 10, includeDeleted = false } = req.query;
     
     const query = includeDeleted === 'true' ? {} : { isDeleted: false };
     
-    const categories = await Category.find(query)
+    const roles = await Role.find(query)
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
-    const count = await Category.countDocuments(query);
+    const count = await Role.countDocuments(query);
 
     res.status(200).json({
       success: true,
-      data: categories,
+      data: roles,
       pagination: {
         total: count,
         page: parseInt(page),
@@ -76,118 +76,118 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// READ - Lấy category theo ID
+// READ - Lấy role theo ID
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const category = await Category.findOne({ _id: id, isDeleted: false });
+    const role = await Role.findOne({ _id: id, isDeleted: false });
 
-    if (!category) {
+    if (!role) {
       return res.status(404).json({
         success: false,
-        message: 'Category not found'
+        message: 'Role not found'
       });
     }
 
     res.status(200).json({
       success: true,
-      data: category
+      data: role
     });
   } catch (error) {
     if (error.kind === 'ObjectId') {
       return res.status(400).json({
         success: false,
-        message: 'Invalid category ID'
+        message: 'Invalid role ID'
       });
     }
     next(error);
   }
 });
 
-// UPDATE - Cập nhật category
+// UPDATE - Cập nhật role
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    // Tìm category
-    const category = await Category.findOne({ _id: id, isDeleted: false });
+    // Tìm role
+    const role = await Role.findOne({ _id: id, isDeleted: false });
 
-    if (!category) {
+    if (!role) {
       return res.status(404).json({
         success: false,
-        message: 'Category not found'
+        message: 'Role not found'
       });
     }
 
     // Kiểm tra name mới có bị trùng không (nếu thay đổi name)
-    if (name && name !== category.name) {
-      const existingCategory = await Category.findOne({ name, isDeleted: false });
-      if (existingCategory) {
+    if (name && name !== role.name) {
+      const existingRole = await Role.findOne({ name, isDeleted: false });
+      if (existingRole) {
         return res.status(400).json({
           success: false,
-          message: 'Category name already exists'
+          message: 'Role name already exists'
         });
       }
-      category.name = name;
+      role.name = name;
     }
 
     if (description !== undefined) {
-      category.description = description;
+      role.description = description;
     }
 
-    await category.save();
+    await role.save();
 
     res.status(200).json({
       success: true,
-      message: 'Category updated successfully',
-      data: category
+      message: 'Role updated successfully',
+      data: role
     });
   } catch (error) {
     if (error.kind === 'ObjectId') {
       return res.status(400).json({
         success: false,
-        message: 'Invalid category ID'
+        message: 'Invalid role ID'
       });
     }
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'Category name already exists'
+        message: 'Role name already exists'
       });
     }
     next(error);
   }
 });
 
-// DELETE - Xóa mềm category
+// DELETE - Xóa mềm role
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const category = await Category.findOne({ _id: id, isDeleted: false });
+    const role = await Role.findOne({ _id: id, isDeleted: false });
 
-    if (!category) {
+    if (!role) {
       return res.status(404).json({
         success: false,
-        message: 'Category not found'
+        message: 'Role not found'
       });
     }
 
-    category.isDeleted = true;
-    await category.save();
+    role.isDeleted = true;
+    await role.save();
 
     res.status(200).json({
       success: true,
-      message: 'Category deleted successfully',
-      data: category
+      message: 'Role deleted successfully',
+      data: role
     });
   } catch (error) {
     if (error.kind === 'ObjectId') {
       return res.status(400).json({
         success: false,
-        message: 'Invalid category ID'
+        message: 'Invalid role ID'
       });
     }
     next(error);
